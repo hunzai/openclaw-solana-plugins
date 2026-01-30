@@ -1,0 +1,38 @@
+{
+  "id": "solana-wallet",
+  "name": "Solana Wallet",
+  "description": "Adds a Solana wallet to your OpenClaw agent for on-chain transactions and trading",
+  "version": "0.1.0",
+  "skills": ["skills/solana-trader"],
+  "configSchema": {
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {
+      "rpcUrl": {
+        "type": "string",
+        "description": "Solana RPC URL (default: public mainnet)"
+      },
+      "walletPath": {
+        "type": "string",
+        "description": "Path to keypair JSON file"
+      },
+      "autoCreateWallet": {
+        "type": "boolean",
+        "description": "Create wallet automatically if not found"
+      }
+    }
+  },
+  "uiHints": {
+    "rpcUrl": {
+      "label": "Solana RPC URL",
+      "placeholder": "https://api.mainnet-beta.solana.com"
+    },
+    "walletPath": {
+      "label": "Wallet Keypair Path",
+      "placeholder": "~/.openclaw/workspace/solana-wallet.json"
+    },
+    "autoCreateWallet": {
+      "label": "Auto-create wallet if missing"
+    }
+  }
+}
