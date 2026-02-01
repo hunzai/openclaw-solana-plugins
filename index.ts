@@ -59,45 +59,47 @@ export async function activate(openclaw: any) {
   }
   
   // Register CLI command
-  openclaw.registerCommand('solana', {
-    description: 'Show Solana wallet address and balance',
-    handler: async () => {
-      try {
-        const exists = await walletExists(walletPath);
-        
-        if (!exists) {
-          console.log('❌ No wallet found. Create one with:');
-          console.log('   openclaw plugins install @solana-clawd/solana-wallet');
-          console.log('   Then use the solana_wallet tool with action="create"');
-          return;
-        }
-        
-        const address = await getAddress(walletPath);
-        console.log(`\n👛 Solana Wallet`);
-        console.log(`Address: ${address}`);
-        console.log(`Explorer: https://solscan.io/account/${address}`);
-        
+  openclaw.registerCli(({ program }: { program: any }) => {
+    program
+      .command('solana')
+      .description('Show Solana wallet address and balance')
+      .action(async () => {
         try {
-          const walletInfo = await getBalance(rpcUrl, address);
-          console.log(`\n💰 Balances:`);
-          console.log(`  SOL: ${walletInfo.solBalance.toFixed(4)}`);
+          const exists = await walletExists(walletPath);
           
-          if (walletInfo.tokenBalances.length > 0) {
-            console.log(`\n🪙 Token Balances:`);
-            for (const token of walletInfo.tokenBalances) {
-              const symbol = token.symbol || `${token.mint.slice(0, 8)}...`;
-              console.log(`  ${symbol}: ${token.uiAmount}`);
-            }
+          if (!exists) {
+            console.log('❌ No wallet found. Create one with:');
+            console.log('   openclaw plugins install @solana-clawd/solana-wallet');
+            console.log('   Then use the solana_wallet tool with action="create"');
+            return;
           }
+          
+          const address = await getAddress(walletPath);
+          console.log(`\n👛 Solana Wallet`);
+          console.log(`Address: ${address}`);
+          console.log(`Explorer: https://solscan.io/account/${address}`);
+          
+          try {
+            const walletInfo = await getBalance(rpcUrl, address);
+            console.log(`\n💰 Balances:`);
+            console.log(`  SOL: ${walletInfo.solBalance.toFixed(4)}`);
+            
+            if (walletInfo.tokenBalances.length > 0) {
+              console.log(`\n🪙 Token Balances:`);
+              for (const token of walletInfo.tokenBalances) {
+                const symbol = token.symbol || `${token.mint.slice(0, 8)}...`;
+                console.log(`  ${symbol}: ${token.uiAmount}`);
+              }
+            }
+          } catch (error) {
+            console.warn('Failed to fetch balance:', error);
+          }
+          
         } catch (error) {
-          console.warn('Failed to fetch balance:', error);
+          console.error('Command failed:', error);
         }
-        
-      } catch (error) {
-        console.error('Command failed:', error);
-      }
-    }
-  });
+      });
+  }, { commands: ['solana'] });
   
   console.log('✅ Solana Wallet Plugin activated');
 }
