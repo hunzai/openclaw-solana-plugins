@@ -54,8 +54,8 @@ export async function activate(openclaw: any) {
   // Register agent tools
   const tools = registerSolanaTools();
   
-  for (const [name, tool] of Object.entries(tools)) {
-    openclaw.registerTool(name, tool);
+  for (const tool of tools) {
+    openclaw.registerTool(tool);
   }
   
   // Register CLI command

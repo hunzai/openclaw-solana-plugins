@@ -188,14 +188,10 @@ function calculateGeckoScore(attr: any): number {
 export function registerSolanaTools() {
   const config = getConfig();
   
-  return {
-    solana_wallet: {
+  return [
+    {
+      name: 'solana_wallet',
       description: 'Manage Solana wallet - create, check balance, get address',
-      examples: [
-        'Check my Solana wallet balance',
-        'Create a new Solana wallet',
-        'Get my Solana wallet address'
-      ],
       parameters: Type.Object({
         action: Type.Union([
           Type.Literal('create'),
@@ -203,7 +199,7 @@ export function registerSolanaTools() {
           Type.Literal('address')
         ], { description: 'Action to perform' })
       }),
-      handler: async ({ action }: { action: 'create' | 'balance' | 'address' }) => {
+      async execute(_id: string, { action }: { action: 'create' | 'balance' | 'address' }) {
         const walletPath = config.walletPath!;
         
         switch (action) {
@@ -211,15 +207,17 @@ export function registerSolanaTools() {
             const exists = await walletExists(walletPath);
             if (exists) {
               const address = await getAddress(walletPath);
-              return { success: true, message: 'Wallet already exists', address };
+              return { content: [{ type: 'text', text: JSON.stringify({ success: true, message: 'Wallet already exists', address }) }] };
             }
             
             const address = await createWallet(walletPath);
             return { 
-              success: true, 
-              message: 'Wallet created successfully', 
-              address,
-              note: 'Please fund this wallet with SOL to start trading'
+              content: [{ type: 'text', text: JSON.stringify({ 
+                success: true, 
+                message: 'Wallet created successfully', 
+                address,
+                note: 'Please fund this wallet with SOL to start trading'
+              }) }]
             };
           }
           
@@ -227,13 +225,13 @@ export function registerSolanaTools() {
             if (!(await walletExists(walletPath))) {
               if (config.autoCreateWallet) {
                 const address = await createWallet(walletPath);
-                return { success: true, address, created: true };
+                return { content: [{ type: 'text', text: JSON.stringify({ success: true, address, created: true }) }] };
               }
-              return { success: false, error: 'Wallet not found' };
+              return { content: [{ type: 'text', text: JSON.stringify({ success: false, error: 'Wallet not found' }) }] };
             }
             
             const address = await getAddress(walletPath);
-            return { success: true, address };
+            return { content: [{ type: 'text', text: JSON.stringify({ success: true, address }) }] };
           }
           
           case 'balance': {
@@ -241,43 +239,39 @@ export function registerSolanaTools() {
               if (config.autoCreateWallet) {
                 const address = await createWallet(walletPath);
                 const walletInfo = await getBalance(config.rpcUrl!, address);
-                return { success: true, ...walletInfo, created: true };
+                return { content: [{ type: 'text', text: JSON.stringify({ success: true, ...walletInfo, created: true }) }] };
               }
-              return { success: false, error: 'Wallet not found' };
+              return { content: [{ type: 'text', text: JSON.stringify({ success: false, error: 'Wallet not found' }) }] };
             }
             
             const address = await getAddress(walletPath);
             const walletInfo = await getBalance(config.rpcUrl!, address);
-            return { success: true, ...walletInfo };
+            return { content: [{ type: 'text', text: JSON.stringify({ success: true, ...walletInfo }) }] };
           }
           
           default:
-            return { success: false, error: 'Invalid action' };
+            return { content: [{ type: 'text', text: JSON.stringify({ success: false, error: 'Invalid action' }) }] };
         }
       }
     },
     
-    solana_swap: {
+    {
+      name: 'solana_swap',
       description: 'Execute a token swap on Solana via Jupiter',
-      examples: [
-        'Swap 10 USDC to SOL',
-        'Buy $5 worth of SOL with USDC',
-        'Exchange SOL for USDC'
-      ],
       parameters: Type.Object({
         inputToken: Type.String({ description: 'Input token symbol or mint address (e.g., SOL, USDC)' }),
         outputToken: Type.String({ description: 'Output token symbol or mint address' }),
         amountUsd: Type.Number({ description: 'USD amount to swap' })
       }),
-      handler: async ({ inputToken, outputToken, amountUsd }: { 
+      async execute(_id: string, { inputToken, outputToken, amountUsd }: { 
         inputToken: string; 
         outputToken: string; 
         amountUsd: number;
-      }) => {
+      }) {
         const walletPath = config.walletPath!;
         
         if (!(await walletExists(walletPath))) {
-          return { success: false, error: 'Wallet not found. Create wallet first.' };
+          return { content: [{ type: 'text', text: JSON.stringify({ success: false, error: 'Wallet not found. Create wallet first.' }) }] };
         }
         
         try {
@@ -302,52 +296,56 @@ export function registerSolanaTools() {
           );
           
           return { 
-            success: true, 
-            signature: result.signature,
-            inputAmount: result.inputAmount,
-            outputAmount: result.outputAmount,
-            inputSymbol: result.inputSymbol,
-            outputSymbol: result.outputSymbol,
-            priceImpact: result.quote.priceImpactPct
+            content: [{ type: 'text', text: JSON.stringify({ 
+              success: true, 
+              signature: result.signature,
+              inputAmount: result.inputAmount,
+              outputAmount: result.outputAmount,
+              inputSymbol: result.inputSymbol,
+              outputSymbol: result.outputSymbol,
+              priceImpact: result.quote.priceImpactPct
+            }) }]
           };
         } catch (error) {
           return { 
-            success: false, 
-            error: error instanceof Error ? error.message : 'Swap failed'
+            content: [{ type: 'text', text: JSON.stringify({ 
+              success: false, 
+              error: error instanceof Error ? error.message : 'Swap failed'
+            }) }]
           };
         }
       }
     },
     
-    solana_scan: {
+    {
+      name: 'solana_scan',
       description: 'Scan for Solana trading opportunities',
-      examples: [
-        'Scan for Solana trading opportunities',
-        'Find trending tokens on Solana',
-        'Look for tokens to trade'
-      ],
       parameters: Type.Object({
         chain: Type.Optional(Type.String({ description: 'Blockchain to scan (default: solana)' })),
         maxResults: Type.Optional(Type.Number({ description: 'Maximum results to return (default: 5)' }))
       }),
-      handler: async ({ chain = 'solana', maxResults = 5 }: { 
+      async execute(_id: string, { chain = 'solana', maxResults = 5 }: { 
         chain?: string; 
         maxResults?: number;
-      }) => {
+      }) {
         try {
           const opportunities = await scanOpportunities(chain, maxResults);
           return { 
-            success: true, 
-            opportunities,
-            count: opportunities.length
+            content: [{ type: 'text', text: JSON.stringify({ 
+              success: true, 
+              opportunities,
+              count: opportunities.length
+            }) }]
           };
         } catch (error) {
           return { 
-            success: false, 
-            error: error instanceof Error ? error.message : 'Scan failed'
+            content: [{ type: 'text', text: JSON.stringify({ 
+              success: false, 
+              error: error instanceof Error ? error.message : 'Scan failed'
+            }) }]
           };
         }
       }
     }
-  };
+  ];
 }
