@@ -191,6 +191,11 @@ export function registerSolanaTools() {
   return {
     solana_wallet: {
       description: 'Manage Solana wallet - create, check balance, get address',
+      examples: [
+        'Check my Solana wallet balance',
+        'Create a new Solana wallet',
+        'Get my Solana wallet address'
+      ],
       parameters: Type.Object({
         action: Type.Union([
           Type.Literal('create'),
@@ -254,6 +259,11 @@ export function registerSolanaTools() {
     
     solana_swap: {
       description: 'Execute a token swap on Solana via Jupiter',
+      examples: [
+        'Swap 10 USDC to SOL',
+        'Buy $5 worth of SOL with USDC',
+        'Exchange SOL for USDC'
+      ],
       parameters: Type.Object({
         inputToken: Type.String({ description: 'Input token symbol or mint address (e.g., SOL, USDC)' }),
         outputToken: Type.String({ description: 'Output token symbol or mint address' }),
@@ -311,6 +321,11 @@ export function registerSolanaTools() {
     
     solana_scan: {
       description: 'Scan for Solana trading opportunities',
+      examples: [
+        'Scan for Solana trading opportunities',
+        'Find trending tokens on Solana',
+        'Look for tokens to trade'
+      ],
       parameters: Type.Object({
         chain: Type.Optional(Type.String({ description: 'Blockchain to scan (default: solana)' })),
         maxResults: Type.Optional(Type.Number({ description: 'Maximum results to return (default: 5)' }))
